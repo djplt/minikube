@@ -96,6 +96,8 @@ const (
 	MinikubeForceSystemdEnv = "MINIKUBE_FORCE_SYSTEMD"
 	// TestDiskUsedEnv is used in integration tests for insufficient storage with 'minikube status'
 	TestDiskUsedEnv = "MINIKUBE_TEST_STORAGE_CAPACITY"
+	// MinikubeRootlessEnv is used to force Rootless Docker/Podman driver
+	MinikubeRootlessEnv = "MINIKUBE_ROOTLESS"
 
 	// scheduled stop constants
 

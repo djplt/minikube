@@ -32,6 +32,9 @@ docker context use rootless
 minikube start --driver=docker --container-runtime=containerd
 ```
 
+Unlike Podman driver, it is not necessary to supply the `--rootless` flag to the `minikube start` command.
+When the `--rootless` flag is explicitly specified but the current Docker host is not rootless, minikube fails.
+
 The `--container-runtime` flag must be set to "containerd" or "cri-o".
 
 The restrictions of rootless `kind` apply to minikube with rootless docker as well.
