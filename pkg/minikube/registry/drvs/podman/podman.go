@@ -108,14 +108,21 @@ func status() registry.State {
 	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
 	defer cancel()
 
+	var o []byte
 	// Quickly returns an error code if service is not running
 	cmd := exec.CommandContext(ctx, oci.Podman, "version", "--format", "{{.Server.Version}}")
 	// Run with sudo on linux (local), otherwise podman-remote (as podman)
 	if runtime.GOOS == "linux" {
-		cmd = exec.CommandContext(ctx, "sudo", "-k", "-n", oci.Podman, "version", "--format", "{{.Version}}")
-		cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C") // sudo is localized
+		// Run podman as USER, if that fails run podman as sudo
+		o, err = cmd.Output()
+		if err != nil && sudoNeedsPassword() {
+			cmd = exec.CommandContext(ctx, "sudo", "-k", "-n", oci.Podman, "version", "--format", "{{.Version}}")
+			cmd.Env = append(os.Environ(), "LANG=C", "LC_ALL=C") // sudo is localized
+			o, err = cmd.Output()
+		}
+	} else {
+		o, err = cmd.Output()
 	}
-	o, err := cmd.Output()
 	output := strings.TrimSpace(string(o))
 	if err == nil {
 		klog.Infof("podman version: %s", output)
@@ -166,4 +173,9 @@ func status() registry.State {
 	}
 
 	return registry.State{Error: err, Installed: true, Healthy: false, Doc: docURL}
+}
+
+func sudoNeedsPassword() bool {
+	err := exec.Command("sudo", "-n", "ls").Run()
+	return err != nil
 }
